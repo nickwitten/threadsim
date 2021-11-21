@@ -49,9 +49,21 @@ static pthread_mutex_t current_mutex;
  *	context_switch() is prototyped in os-sim.h. Look there for more information 
  *	about it and its parameters.
  */
+pcb_t *ready = NULL;
 static void schedule(unsigned int cpu_id)
 {
-    /* FIX ME */
+    // This must be called with current_mutex locked
+    pcb_t* process;
+    process = ready;
+    while (process != NULL && process->state != PROCESS_READY) {
+        process = process->next;
+    }
+    ready = (process != NULL) ? process->next : NULL;
+    if (process) {
+        process->state = PROCESS_RUNNING;
+    }
+    context_switch(cpu_id, process, -1);
+    current[cpu_id] = process;
 }
 
 
@@ -62,10 +74,15 @@ static void schedule(unsigned int cpu_id)
  * This function should block until a process is added to your ready queue.
  * It should then call schedule() to select the process to run on the CPU.
  */
+pthread_cond_t p_ready;
 extern void idle(unsigned int cpu_id)
 {
-    /* FIX ME */
-    schedule(0);
+    pthread_mutex_lock(&current_mutex);
+    while (ready == NULL) {
+        pthread_cond_wait(&p_ready, &current_mutex);
+    }
+    schedule(cpu_id);
+    pthread_mutex_unlock(&current_mutex);
 
     /*
      * REMOVE THE LINE BELOW AFTER IMPLEMENTING IDLE()
@@ -76,7 +93,7 @@ extern void idle(unsigned int cpu_id)
      * you implement a proper idle() function using a condition variable,
      * remove the call to mt_safe_usleep() below.
      */
-    mt_safe_usleep(1000000);
+    // mt_safe_usleep(1000000);
 }
 
 
@@ -102,7 +119,12 @@ extern void preempt(unsigned int cpu_id)
  */
 extern void yield(unsigned int cpu_id)
 {
-    /* FIX ME */
+    pthread_mutex_lock(&current_mutex);
+        pcb_t *process = current[cpu_id];
+        process->state = PROCESS_WAITING;
+        process->next = NULL;
+        schedule(cpu_id);
+    pthread_mutex_unlock(&current_mutex);
 }
 
 
@@ -113,7 +135,12 @@ extern void yield(unsigned int cpu_id)
  */
 extern void terminate(unsigned int cpu_id)
 {
-    /* FIX ME */
+    pthread_mutex_lock(&current_mutex);
+        pcb_t *process = current[cpu_id];
+        process->state = PROCESS_TERMINATED;
+        process->next = NULL;
+        schedule(cpu_id);
+    pthread_mutex_unlock(&current_mutex);
 }
 
 
@@ -135,7 +162,19 @@ extern void terminate(unsigned int cpu_id)
  */
 extern void wake_up(pcb_t *process)
 {
-    /* FIX ME */
+    pthread_mutex_lock(&current_mutex);
+        process->state = PROCESS_READY;
+        pcb_t* curr_pcb = ready;
+        if (curr_pcb == NULL) {
+            ready = process;
+        } else {
+            while (curr_pcb->next != NULL) {
+                curr_pcb = curr_pcb->next;
+            }
+            curr_pcb->next = process;
+        }
+    pthread_mutex_unlock(&current_mutex);
+    pthread_cond_signal(&p_ready);
 }
 
 
