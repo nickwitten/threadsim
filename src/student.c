@@ -15,7 +15,6 @@
 
 //
 unsigned int cpu_count;
-void _break_() {return;}
 int RR = 0;
 int LR = 0;
 int TSLICE = -1;
@@ -63,6 +62,7 @@ static void schedule(unsigned int cpu_id)
 {
     pcb_t* process;
     pthread_mutex_lock(&current_mutex);
+
         process = readyq;
         if (LR) {
 
@@ -84,7 +84,6 @@ static void schedule(unsigned int cpu_id)
             }
             if (lrt_prev_process != NULL) {
                 lrt_prev_process->next = lrt_process->next;
-                printf("Found a longer process in the queue\n");
             } else {
                 readyq = (lrt_process) ? lrt_process->next : NULL;
             }
@@ -104,6 +103,7 @@ static void schedule(unsigned int cpu_id)
 
     pthread_mutex_unlock(&current_mutex);
     context_switch(cpu_id, process, TSLICE);
+
 }
 
 
@@ -201,6 +201,7 @@ extern void wake_up(pcb_t *process)
     unsigned int least_time = process->time_remaining;
     int least_time_i = -1;
     pthread_mutex_lock(&current_mutex);
+
         if (LR) {
             for (unsigned int i=0; i < cpu_count; i++) {
                 if (current[i]) {
@@ -221,11 +222,11 @@ extern void wake_up(pcb_t *process)
             }
             curr_pcb->next = process;
         }
+
     pthread_mutex_unlock(&current_mutex);
     pthread_cond_signal(&p_ready);
 
     if (least_time_i != -1) {
-        printf("%i\n", least_time_i);
         force_preempt((unsigned int)least_time_i);
     }
 }

@@ -1,21 +1,33 @@
 ECE 3058
 Thread Scheduling Lab
 
-Name:
-GT Username:
+Name:  Nicholas Witten
+GT Username:  nwitten3
+
 
 Problem 1B
 ----------
+There is not a linear relationship.  My runtimes were 67.6s, 36.3s, and 33.1s for 1, 2, and 4 cores
+respectively.  This is because the IO, as the serial part of the program, cannot be sped up through
+more parallel computing.
 
-/* Fix me */
 
 Problem 2B
 ----------
+The total time spent in READY state was 330.0s, 313.3s, 300.0s, and 283.2s for 800ms, 600ms, 400ms,
+and 200ms time slices respectively.  Really short time slices would not be the best choice for
+a real OS because of the overhead associated with a context switch.  Shorter timeslices corresponds
+to more context switches, therefore it is better to compute for a longer burst than a really short
+one.
 
-/* Fix me */
 
 Problem 3B
 ----------
+It is impossible to know precisely the time remaining in a program before it is complete.  You 
+would need to run the program to know how much time it has left.  FIFO had a time spent in READY
+state of 389.4s while LRTF had a time spent in READY state of 280.9s.  LRTF performs better
+because it is able to run processes for longer bursts.  This is ideal for minimizing the overhead
+that context switching causes.  We can also make sure that processes are in an IO blocked state
+before switching to a new thread, which is ideal for cutting down on waiting ready processes.
 
-/* Fix me */
 

@@ -242,9 +242,10 @@ static void simulator_cpu_thread(unsigned int cpu_id)
             /* a process was scheduled */
             simulator_cpu_data[cpu_id].state = CPU_RUNNING;
 
-            while (simulator_cpu_data[cpu_id].state == CPU_RUNNING)
+            while (simulator_cpu_data[cpu_id].state == CPU_RUNNING) {
                 pthread_cond_wait(&simulator_cpu_data[cpu_id].wakeup,
                     &simulator_mutex);
+            }
         }
         state = simulator_cpu_data[cpu_id].state;
         pthread_mutex_unlock(&simulator_mutex);
@@ -352,10 +353,12 @@ static void print_gantt_line(void)
     /* Print running processes */
     for (n=0; n<cpu_count; n++)
     {
-        if (simulator_cpu_data[n].current != NULL)
+        if (simulator_cpu_data[n].current != NULL) {
             printf(" %-8s", simulator_cpu_data[n].current->name);
-        else
+        } else {
             printf(" (IDLE)  ");
+        }
+        //
     }
 
     /* Print I/O requests */
